@@ -1,0 +1,50 @@
+services:
+  database:
+    image: mongo:7
+    container_name: three-tier-db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: three_tier_db
+    volumes:
+      - db_data:/data/db
+    networks:
+      - backend-network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: three-tier-backend
+    restart: always
+    depends_on:
+      - database
+    environment:
+      PORT: 8000
+      MONGO_URI: mongodb://database:27017/three_tier_db
+    ports:
+      - "8000:8000"
+    networks:
+      - backend-network
+      - frontend-network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: three-tier-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+
+volumes:
+  db_data:
